@@ -4,6 +4,13 @@ Kaizer writes full-length light novels and web novels on autopilot. Give it a pr
 
 It runs on your own ChatGPT plan through OpenAI's [Sign in with ChatGPT](https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt). Books and story memory stay on your computer in `data/kaizer.db`.
 
+![A book in Kaizer: the chapter list, the chapter, and what the story remembers about every character](docs/screenshots/book.png)
+
+<p>
+  <img src="docs/screenshots/library.png" width="49%" alt="The library: every book with its progress and length">
+  <img src="docs/screenshots/reader.png" width="49%" alt="The reader in its paper theme">
+</p>
+
 ## Run it
 
 Requires Node.js 24 or newer.
@@ -17,6 +24,10 @@ npm start          # http://127.0.0.1:4317
 For development (server and Vite with hot reload), run `npm run dev` and open http://127.0.0.1:5173.
 
 Use `127.0.0.1`, not `localhost`. Sign in with ChatGPT only redirects back to loopback IP addresses.
+
+A new book needs only a premise. Genre, tropes, voice, length, and model are optional.
+
+![The new book form](docs/screenshots/new.png)
 
 ## How it keeps a long book consistent
 
@@ -58,7 +69,9 @@ A paused book carries out a request without resuming, a finished one reopens for
 
 ## The proofreader
 
-When the last chapter is done, the whole book is re-read in windows of consecutive chapters, each checked against the full story: contradictions, timeline breaks, setups without payoffs, broken text. Flagged chapters are repaired by editing only the passages at fault: the model returns each passage with its replacement, and an edit is applied only when that passage is found exactly once, so the rest of the chapter stays word for word. If the edits cannot be placed, the chapter is rewritten instead. Three windows are read at once, but their findings land in order, as if read one after another: once a window has something to repair, the readings of the windows after it are set aside and made again after the repairs, so no window is repaired from a reading that an earlier repair has made stale. Repairs run up to three at once too, but only for chapters at least four apart that no finding ties together (a finding is tied to every chapter it names); tied repairs go one after the other, and the second checks whether the first already settled its problem. Changes you asked for go one at a time. A repair that changes nothing, or would gut, bloat, or repeat the chapter, is refused. A repaired chapter has its recap and canon facts read again from the new text, its arc's synopsis is written again, and it is checked once more, up to its third repair. A last pass judges every open plot thread and the ending, and repairs the holes. Nitpicks are repaired too, except in a chapter you edited by hand, where they wait for you. The report shows what was repaired and what could not be. **Repair these too** sends nitpicks still waiting through the same repair. **Proofread again** runs the whole pass once more whenever you like, from scratch, on any book whose last chapter is written; its report replaces the last one. The proofreader can use its own model and reasoning level (**Proofreading** in the book's stats panel); chapters are still written with the book's model.
+When the last chapter is done, the whole book is re-read in windows of consecutive chapters, each checked against the full story: contradictions, timeline breaks, setups without payoffs, broken text. Flagged chapters are repaired by editing only the passages at fault: the model returns each passage with its replacement, and an edit is applied only when that passage is found exactly once, so the rest of the chapter stays word for word. If the edits cannot be placed, the chapter is rewritten instead. Three windows are read at once, but their findings land in order, as if read one after another: once a window has something to repair, the readings of the windows after it are set aside and made again after the repairs, so no window is repaired from a reading that an earlier repair has made stale. Repairs run up to three at once too, but only for chapters at least four apart that no finding ties together (a finding is tied to every chapter it names); tied repairs go one after the other, and the second checks whether the first already settled its problem. Changes you asked for go one at a time. A repair that changes nothing, or would gut, bloat, or repeat the chapter, is refused. A repaired chapter has its recap and canon facts read again from the new text, its arc's synopsis is written again, and it is checked once more, up to its third repair. A last pass judges every open plot thread and the ending, and repairs the holes. Nitpicks are repaired too, except in a chapter you edited by hand, where they wait for you. The report shows what was repaired, what needed no change once the chapter was checked again, and what could not be repaired; a repair that is refused is tried once more before it lands there, and **Try again** sends those back through. **Repair these too** sends nitpicks still waiting through the same repair. **Proofread again** runs the whole pass once more whenever you like, from scratch, on any book whose last chapter is written; its report replaces the last one. The proofreader can use its own model and reasoning level (**Proofreading** in the book's stats panel); chapters are still written with the book's model.
+
+![The proofreading report of a finished book](docs/screenshots/proof.png)
 
 A ChatGPT sign-in lasts one hour and is meant to renew itself. When ChatGPT refuses the renewal, Kaizer keeps writing until the hour is up, shows a **Renew sign-in** prompt, and otherwise holds the book until you sign in again, then resumes it without being asked.
 
