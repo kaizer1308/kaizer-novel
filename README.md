@@ -37,7 +37,7 @@ Each chapter is written from a context packet that fits a fixed token budget. Ka
 - **Cast cards:** a profile for every character, place, or item in the chapter, plus its *current state*. That includes anyone the chapter's plan or text names, not only the planned cast. The state covers location, condition, level, possessions, relationships, and what that character knows. It is carried forward chapter to chapter, so lasting details are kept. When the story settles something the profile got wrong, a correction is added to the profile.
 - **Every other name in the book, with its role:** so a new minor character is never given a name someone already has.
 - **Story so far:** synopses of finished arcs, summaries of the current arc and the last dozen chapters, and detailed recaps of the last three chapters.
-- **Canon facts:** retrieved with full-text search on the chapter's cast and beats.
+- **Canon facts:** the whole canon written so far, ranked by full-text search on the chapter's cast and beats. A fact no search term reaches still goes in: a chapter can contradict a detail its plan never mentions. Up to about 200 chapters the canon fits whole; past that, the lowest-ranked facts are left out first.
 - **Open plot threads:** unresolved setups waiting for a payoff.
 - **The final passage of the previous chapter:** for voice and scene continuity.
 - **The next chapter's plan:** so this chapter stops at its hook instead of playing out what comes next.

@@ -19,6 +19,22 @@ test('pipelined draft sees the full undigested previous chapter, not stale scene
   assert.ok(!out.includes('OLD SCENE END'), 'chapter 1 scene_end must not pose as the previous chapter ending')
 })
 
+test('the whole canon goes in while it fits; what no keyword reached is cut first', () => {
+  const bible = { title: 'T', logline: 'L', synopsis: 'S', themes: [], world: 'W', rules: [], power_system: 'none', glossary: [] }
+  const id = Number(run('insert into books (title, settings, bible, created_at, updated_at) values (?, ?, ?, 0, 0)', 'T', '{}', JSON.stringify(bible)).lastInsertRowid)
+  run('insert into arcs (book_id, idx, title, goal, plan, chapter_count, expanded) values (?, 0, ?, ?, ?, 2, 1)', id, 'A', 'G', 'P')
+  run('insert into chapters (book_id, arc_idx, idx, title, status, text, summary, detail) values (?, 0, 1, ?, ?, ?, ?, ?)', id, 'C1', 'done', 'prose', 's', 'd')
+  run('insert into chapters (book_id, arc_idx, idx, title, status, beats) values (?, 0, 2, ?, ?, ?)', id, 'C2', 'planned', JSON.stringify(['Lina orders breakfast']))
+  run('insert into facts (book_id, chapter, text, tags) values (?, 1, ?, ?)', id, 'Breakfast at the inn is always rice porridge.', '')
+  run('insert into facts (book_id, chapter, text, tags) values (?, 1, ?, ?)', id, 'The innkeeper takes his coffee black.', '')
+  const ch = get('select * from chapters where book_id = ? and idx = 2', id)
+  const out = chapterContext(id, ch)
+  assert.ok(out.includes('rice porridge') && out.includes('coffee black'), 'the unmatched fact rides along')
+  assert.ok(out.indexOf('rice porridge') < out.indexOf('coffee black'), 'matched facts rank first')
+  const tight = chapterContext(id, ch, tokens(out) - 5)
+  assert.ok(tight.includes('rice porridge') && !tight.includes('coffee black'), 'the unmatched fact is the first to go')
+})
+
 test('fit trims by priority and never drops protected sections', () => {
   const big = (tag: string, n: number) => Array.from({ length: n }, (_, i) => `${tag}${i} `.repeat(50))
   const sections = [

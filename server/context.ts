@@ -117,7 +117,9 @@ export const threadItems = (bookId: number, limit = -1, through = 1e9) =>
     .map(t => `- #${t.id} (since ch ${t.chapter}): ${t.text}${t.payoff ? ` → payoff: ${t.payoff}` : ''}`)
 
 // Everything the writer (and continuity editor) needs for chapter `ch`.
-export function chapterContext(bookId: number, ch: any, budget = 40_000) {
+// The budget is the canon's: the rest of the packet stays near 20k, and the whole canon of a book of about 200
+// chapters fits beside it. Past that, keyword ranking decides what is left out.
+export function chapterContext(bookId: number, ch: any, budget = 120_000) {
   const book = get('select * from books where id = ?', bookId)!
   const bible: Bible = JSON.parse(book.bible)
   const cast: string[] = JSON.parse(ch.cast_names)
@@ -136,6 +138,13 @@ export function chapterContext(bookId: number, ch: any, budget = 40_000) {
   const tail = prev ? lastWords(prev.text, 1500) : pending ? lastWords(pending.text, Infinity) : []
   const beats: string[] = JSON.parse(ch.beats)
   const final = !get('select 1 from chapters where book_id = ? and idx > ?', bookId, ch.idx) && !get('select 1 from arcs where book_id = ? and idx > ?', bookId, ch.arc_idx)
+  // The whole canon goes in while it fits: keyword search ranks it, but a fact it ranks low (the coffee he
+  // remembered, two chapters back) is still one the chapter can contradict. Past the best hundred, the rest is
+  // what the budget cuts first: the weakest matches, then facts no keyword reached, oldest last.
+  const ranked = relevantFacts(bookId, [...names, ...present.map(e => e.name)], beats, ch.idx, -1)
+  const seen = new Set(ranked.map(f => f.id))
+  const rest = all<{ id: number; chapter: number; text: string }>('select id, chapter, text from facts where book_id = ? and chapter < ? order by chapter desc, id', bookId, ch.idx).filter(f => !seen.has(f.id))
+  const fact = (f: { chapter: number; text: string }) => `- (ch ${f.chapter}) ${f.text}`
 
   return fit([
     { title: 'Story bible', items: bibleCore(bible, false) },
@@ -144,7 +153,8 @@ export function chapterContext(bookId: number, ch: any, budget = 40_000) {
     { title: 'Story so far: earlier arcs', items: all('select * from arcs where book_id = ? and idx < ? and synopsis is not null order by idx', bookId, ch.arc_idx).map(a => `Arc ${a.idx + 1}, ${a.title}: ${a.synopsis}`), drop: 2 },
     { title: 'Story so far: this arc and recent chapters', items: older.map(c => `Ch ${c.idx} "${c.title}": ${c.summary}`), drop: 1 },
     { title: 'Recent chapters in detail', items: recent.map(c => `Ch ${c.idx} "${c.title}":\n${c.detail}`), drop: 6 },
-    { title: 'Relevant canon facts (a later chapter overrides an earlier one)', items: relevantFacts(bookId, [...names, ...present.map(e => e.name)], beats, ch.idx).map(f => `- (ch ${f.chapter}) ${f.text}`), drop: 4, fromEnd: true },
+    { title: 'Relevant canon facts (a later chapter overrides an earlier one)', items: ranked.slice(0, 100).map(fact), drop: 4, fromEnd: true },
+    { title: 'More canon facts (same rule)', items: [...ranked.slice(100), ...rest].map(fact), drop: 0, fromEnd: true },
     { title: 'Open plot threads (newest first)', items: threadItems(bookId, 40), drop: 5, fromEnd: true },
     { title: 'Where the previous chapter ended', items: prev?.scene_end ? [prev.scene_end] : [] },
     {
